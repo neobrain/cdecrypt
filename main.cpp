@@ -21,26 +21,27 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <openssl\aes.h>
-#include <openssl\sha.h>
+#include <openssl/aes.h>
+#include <openssl/sha.h>
 #include <time.h>
 #include <vector>
-#include <direct.h>
 #include <ctype.h>
+#include <cstdint>
+#include <sys/stat.h>
 
 #pragma comment(lib,"libeay32.lib")
 
-typedef unsigned	__int64 u64;
-typedef signed		__int64 s64;
+typedef uint64_t u64;
+typedef int64_t s64;
 
-typedef unsigned	int u32;
-typedef signed		int s32;
+typedef uint32_t u32;
+typedef int32_t s32;
 
-typedef unsigned	short u16;
-typedef signed		short s16;
+typedef uint16_t u16;
+typedef int16_t s16;
 
-typedef unsigned	char u8;
-typedef signed		char s8;
+typedef uint8_t u8;
+typedef int8_t s8;
 
 AES_KEY key;
 u8 enc_title_key[16];
@@ -268,7 +269,7 @@ void ExtractFileHash( FILE *in, u64 PartDataOffset, u64 FileOffset, u64 Size, ch
 	if( soffset+Size > WriteSize )
 		WriteSize = WriteSize - soffset;
 
-	_fseeki64( in, PartDataOffset+roffset, SEEK_SET );
+	fseeko( in, PartDataOffset+roffset, SEEK_SET );
 	while(Size > 0)
 	{
 		if( WriteSize > Size )
@@ -350,7 +351,7 @@ void ExtractFile( FILE *in, u64 PartDataOffset, u64 FileOffset, u64 Size, char *
 	if( soffset+Size > WriteSize )
 		WriteSize = WriteSize - soffset;
 
-	_fseeki64( in, PartDataOffset+roffset, SEEK_SET );
+	fseeko( in, PartDataOffset+roffset, SEEK_SET );
 	
 	while(Size > 0)
 	{
@@ -530,12 +531,12 @@ s32 main( s32 argc, char*argv[])
 			for( s32 j=0; j<level; ++j )
 			{
 				if(j)
-					Path[strlen(Path)] = '\\';
+					Path[strlen(Path)] = '/';
 				memcpy( Path+strlen(Path), CNT + NameOff + bs24( fe[Entry[j]].NameOffset), strlen(CNT + NameOff + bs24( fe[Entry[j]].NameOffset) ) );
-				_mkdir(Path);
+				mkdir(Path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 			}
 			if(level)
-				Path[strlen(Path)] = '\\';
+				Path[strlen(Path)] = '/';
 			memcpy( Path+strlen(Path), CNT + NameOff + bs24( fe[i].NameOffset ), strlen(CNT + NameOff + bs24( fe[i].NameOffset )) );
 
 			u32 CNTSize = bs32(fe[i].FileLength);
@@ -552,7 +553,7 @@ s32 main( s32 argc, char*argv[])
 				FILE *cnt = fopen( str, "rb" );
 				if( cnt == NULL )
 				{
-					sprintf( str, "%08X", ContFileID );
+					sprintf( str, "%08x", ContFileID );
 					cnt = fopen( str, "rb" );
 					if( cnt == NULL )
 					{
